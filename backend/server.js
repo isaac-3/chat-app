@@ -59,7 +59,7 @@ db.once('open', () => {
 
 // api routes
 app.get('/', (req, res) => {
-    res.status(200).send('hello isaac')
+    res.status(200).send('hello isaac check req')
 })
 
 app.get('/messages/sync', (req, res) => {
