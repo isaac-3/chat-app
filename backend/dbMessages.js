@@ -1,10 +1,10 @@
 import mongoose from 'mongoose'
 
-const chatappSchema = mongoose.Schema({
+const msgSchema = mongoose.Schema({
     message: String,
     name: String,
     timestamp: String,
     received: Boolean
 })
 
-export default mongoose.model('messagecontents', chatappSchema)
+export default mongoose.model('messagecontents', msgSchema)
