@@ -8,6 +8,7 @@ import cors from 'cors'
 
 //
 const router = express.Router()
+
 // app config
 const app = express()
 const port = process.env.PORT || 9000
@@ -25,6 +26,7 @@ app.use(cors())
 
 //DB config
 const connection_url = 'mongodb+srv://admin:QXgAYFtssNod0bDA@cluster0.lt9gb.mongodb.net/chat-app?retryWrites=true&w=majority'
+mongoose.set('useFindAndModify', false); // for findoneandupdate
 mongoose.connect(connection_url,{
     useCreateIndex: true,
     useNewUrlParser: true,
@@ -33,44 +35,78 @@ mongoose.connect(connection_url,{
 
 const db = mongoose.connection
 
-db.once('open', () => {
-    console.log('db is connected')
-    const msgCollection = db.collection("messagecontents")
-    const changeStream = msgCollection.watch()
-    changeStream.on('change', (change) => {
-        if(change.operationType === 'insert'){
-            const messageDetails = change.fullDocument
-            pusher.trigger('messages', 'inserted', 
-                {
-                    name: messageDetails.name, 
-                    message: messageDetails.message,
-                    timestamp: messageDetails.timestamp,
-                    received: messageDetails.received
-                }
-            )
-        }else{
-            console.log('err w pusher')
-        }
-    })
-})
+// db.once('open', () => {
+//     console.log('db is connected')
+//     const msgCollection = db.collection("messagecontents")
+//     const changeStream = msgCollection.watch()
+//     changeStream.on('change', (change) => {
+//         if(change.operationType === 'insert'){
+//             const messageDetails = change.fullDocument
+//             pusher.trigger('messages', 'inserted', 
+//                 {
+//                     name: messageDetails.name, 
+//                     message: messageDetails.message,
+//                     timestamp: messageDetails.timestamp,
+//                     received: messageDetails.received
+//                 }
+//             )
+//         }else{
+//             console.log('err w pusher')
+//         }
+//     })
+// })
 
 db.once('open', () => {
-    console.log('db is connected')
+    console.log('roomdb is connected')
     const roomCollection = db.collection("roomcontents")
-    const changeStream = roomCollection.watch()
+    const changeStream = roomCollection.watch({ fullDocument: 'updateLookup' })
     changeStream.on('change', (change) => {
+        console.log(change.operationType)
         if(change.operationType === 'insert'){
             const roomDetails = change.fullDocument
             pusher.trigger('rooms', 'inserted', 
                 {
-                    name: roomDetails.name
+                    _id: roomDetails._id,
+                    name: roomDetails.name,
+                    messages: roomDetails.messages
+                }
+            )
+        }else if(change.operationType === 'update'){
+            const roomDetails = change.fullDocument
+            console.log(roomDetails)
+            pusher.trigger('rooms', 'updated', 
+                {
+                    _id: roomDetails._id,
+                    name: roomDetails.name,
+                    messages: roomDetails.messages
                 }
             )
         }else{
-            console.log('err w pusher')
+            console.log("err w pusher")
         }
     })
 })
+
+// db.once('open', () => {
+//     console.log('db is connected')
+//     const roomCollection = db.collection("roomcontents")
+//     const changeStream = roomCollection.watch({ fullDocument: 'updateLookup' })
+//     changeStream.on('change', (change) => {
+//     // console.log(change)
+//         if(change.operationType === 'update'){
+//             const roomDetails = change.fullDocument
+//             // console.log(roomDetails)
+//             pusher.trigger('rooms', 'update', 
+//                 {
+//                     // name: roomDetails.name,
+//                     messages: roomDetails.messages
+//                 }
+//             )
+//         }else{
+//             console.log('err w pusher')
+//         }
+//     })
+// })
 
 
 // api routes
@@ -84,14 +120,23 @@ app.get('/messages/sync', (req, res) => {
     })
 })
 
-app.post('/messages/new', (req, res) => {
-    const dbMessage = req.body
-
-    Messages.create(dbMessage, (err, data) => {
+app.patch('/messages/new', (req, res) => {
+    const newMsg = {
+        message: req.body.message,
+        name: req.body.name,
+        timestamp: req.body.timestamp
+    }
+    Rooms.findByIdAndUpdate(req.body.roomId, {
+        $push:{messages: newMsg}
+    },{
+        new: true
+    })
+    .populate("messages")
+    .exec((err, result)=>{
         if(err){
-            res.status(500).send(err)
+            return res.status(422).json({error: err})
         }else{
-            res.status(201).send(data)
+            res.json(result)
         }
     })
 })
@@ -124,13 +169,6 @@ app.get('/rooms/:roomId', (req, res) => {
     }).catch(err => {
         return res.status(404).json({error: "Room Not Found"})
     })
-    // Rooms.find((err, data) => {
-    //     if(err){
-    //         res.status(500).send(err)
-    //     }else{
-    //         res.status(200).send(data)
-    //     }
-    // })
 })
 
 //listen
