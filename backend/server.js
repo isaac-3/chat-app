@@ -3,11 +3,13 @@ import express from 'express'
 import mongoose from 'mongoose'
 import Messages from './dbMessages.js'
 import Rooms from './dbRooms.js'
+import Users from './dbUser.js'
 import Pusher from 'pusher'
 import cors from 'cors'
+import bcrypt from 'bcryptjs'
 
 //
-const router = express.Router()
+// const router = express.Router()
 
 // app config
 const app = express()
@@ -35,27 +37,6 @@ mongoose.connect(connection_url,{
 
 const db = mongoose.connection
 
-// db.once('open', () => {
-//     console.log('db is connected')
-//     const msgCollection = db.collection("messagecontents")
-//     const changeStream = msgCollection.watch()
-//     changeStream.on('change', (change) => {
-//         if(change.operationType === 'insert'){
-//             const messageDetails = change.fullDocument
-//             pusher.trigger('messages', 'inserted', 
-//                 {
-//                     name: messageDetails.name, 
-//                     message: messageDetails.message,
-//                     timestamp: messageDetails.timestamp,
-//                     received: messageDetails.received
-//                 }
-//             )
-//         }else{
-//             console.log('err w pusher')
-//         }
-//     })
-// })
-
 db.once('open', () => {
     console.log('roomdb is connected')
     const roomCollection = db.collection("roomcontents")
@@ -72,13 +53,15 @@ db.once('open', () => {
                 }
             )
         }else if(change.operationType === 'update'){
-            const roomDetails = change.fullDocument
-            console.log(roomDetails)
-            pusher.trigger('rooms', 'updated', 
+            const roomId = change.fullDocument._id
+            const {message, name, timestamp, _id} = change.fullDocument.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]
+            pusher.trigger('rooms', 'newmsg',
                 {
-                    _id: roomDetails._id,
-                    name: roomDetails.name,
-                    messages: roomDetails.messages
+                    message,
+                    name,
+                    timestamp,
+                    _id,
+                    roomId
                 }
             )
         }else{
@@ -86,27 +69,6 @@ db.once('open', () => {
         }
     })
 })
-
-// db.once('open', () => {
-//     console.log('db is connected')
-//     const roomCollection = db.collection("roomcontents")
-//     const changeStream = roomCollection.watch({ fullDocument: 'updateLookup' })
-//     changeStream.on('change', (change) => {
-//     // console.log(change)
-//         if(change.operationType === 'update'){
-//             const roomDetails = change.fullDocument
-//             // console.log(roomDetails)
-//             pusher.trigger('rooms', 'update', 
-//                 {
-//                     // name: roomDetails.name,
-//                     messages: roomDetails.messages
-//                 }
-//             )
-//         }else{
-//             console.log('err w pusher')
-//         }
-//     })
-// })
 
 
 // api routes
@@ -168,6 +130,62 @@ app.get('/rooms/:roomId', (req, res) => {
         res.json({room})
     }).catch(err => {
         return res.status(404).json({error: "Room Not Found"})
+    })
+})
+
+app.post('/signup', (req, res) => {
+    const {name, email, password} = req.body 
+    if( !email || !password || !name){
+        return res.status(422).json({error: 'Pls add all the fields'})
+    }
+    Users.findOne({email: email})
+    .then((savedUser)=>{
+        if(savedUser){
+            return res.json({error: 'User already exisit with that email'})
+        }
+        bcrypt.hash(password, 12)
+        .then(hashedpassword => {
+            const user = new Users({
+                email,
+                password: hashedpassword,
+                name,
+            })
+            user.save()
+            .then(user=>{
+                res.json({message: 'saved seccusfullt'})
+            })
+            .catch(err => {
+                console.log(err)
+            })
+        })
+    })
+    .catch(err => {
+        console.log(err)
+    })
+})
+
+app.post('/login', (req, res) => {
+    const { email, password } = req.body
+    if(!email || !password){
+        return res.status(422).json({error: 'pls add email or password!'})
+    }
+    Users.findOne({email: email})
+    .then(savedUser => {
+        if(!savedUser){
+            return res.json({error: 'User does not exist'})
+        }
+        bcrypt.compare(password, savedUser.password)
+        .then(doMatch => {
+            if(doMatch){
+                const {_id, name, email} = savedUser
+                res.json({user: {_id, name, email}})
+            }else{
+                return res.json({error: 'invalid email or pssword'})
+            }
+        })
+        .catch(err => {
+            console.log(err)
+        })
     })
 })
 
