@@ -1,26 +1,41 @@
 //importing
 import express from 'express'
 import mongoose from 'mongoose'
-import Messages from './dbMessages.js'
-import Rooms from './dbRooms.js'
-import Users from './dbUser.js'
 import Pusher from 'pusher'
 import cors from 'cors'
 import bcrypt from 'bcryptjs'
+import socket from 'socket.io'
+import http from 'http'
 
 //
+import Messages from './dbMessages.js'
+import Rooms from './dbRooms.js'
+import Users from './dbUser.js'
 // const router = express.Router()
 
 // app config
-const app = express()
+// const app = express()
+// const http = createServer(app)
+// const io = (http)
 const port = process.env.PORT || 9000
-const pusher = new Pusher({
-    appId: '1075101',
-    key: '5954b58616a76df09f9f',
-    secret: '4b57ac402b162b0a471c',
-    cluster: 'us2',
-    encrypted: true
-  });
+
+const app = express();
+const server = app.listen(port, () => {
+    console.log('listening for requests on port', port)
+});
+
+let io = socket(server)
+io.on('connection', (socket) => {
+  console.log(`${socket.id} is connected here`)
+});
+
+// const pusher = new Pusher({
+//     appId: '1075101',
+//     key: '5954b58616a76df09f9f',
+//     secret: '4b57ac402b162b0a471c',
+//     cluster: 'us2',
+//     encrypted: true
+//   });
 
 //middleware
 app.use(express.json())
@@ -37,38 +52,38 @@ mongoose.connect(connection_url,{
 
 const db = mongoose.connection
 
-db.once('open', () => {
-    console.log('roomdb is connected')
-    const roomCollection = db.collection("roomcontents")
-    const changeStream = roomCollection.watch({ fullDocument: 'updateLookup' })
-    changeStream.on('change', (change) => {
-        console.log(change.operationType)
-        if(change.operationType === 'insert'){
-            const roomDetails = change.fullDocument
-            pusher.trigger('rooms', 'inserted', 
-                {
-                    _id: roomDetails._id,
-                    name: roomDetails.name,
-                    messages: roomDetails.messages
-                }
-            )
-        }else if(change.operationType === 'update'){
-            const roomId = change.fullDocument._id
-            const {message, name, timestamp, _id} = change.fullDocument.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]
-            pusher.trigger('rooms', 'newmsg',
-                {
-                    message,
-                    name,
-                    timestamp,
-                    _id,
-                    roomId
-                }
-            )
-        }else{
-            console.log("err w pusher")
-        }
-    })
-})
+// db.once('open', () => {
+//     console.log('roomdb is connected')
+//     const roomCollection = db.collection("roomcontents")
+//     const changeStream = roomCollection.watch({ fullDocument: 'updateLookup' })
+//     changeStream.on('change', (change) => {
+//         console.log(change.operationType)
+//         if(change.operationType === 'insert'){
+//             const roomDetails = change.fullDocument
+//             pusher.trigger('rooms', 'inserted', 
+//                 {
+//                     _id: roomDetails._id,
+//                     name: roomDetails.name,
+//                     messages: roomDetails.messages
+//                 }
+//             )
+//         }else if(change.operationType === 'update'){
+//             const roomId = change.fullDocument._id
+//             const {message, name, timestamp, _id} = change.fullDocument.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]
+//             pusher.trigger('rooms', 'newmsg',
+//                 {
+//                     message,
+//                     name,
+//                     timestamp,
+//                     _id,
+//                     roomId
+//                 }
+//             )
+//         }else{
+//             console.log("err w pusher")
+//         }
+//     })
+// })
 
 
 // api routes
@@ -98,6 +113,17 @@ app.patch('/messages/new', (req, res) => {
         if(err){
             return res.status(422).json({error: err})
         }else{
+            const roomId = result._id
+            const {message, name, timestamp, _id} = result.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]
+            io.emit('new-msg',
+                {
+                    message,
+                    name,
+                    timestamp,
+                    _id,
+                    roomId
+                }
+            )
             res.json(result)
         }
     })
@@ -119,7 +145,7 @@ app.post('/rooms/new', (req, res) => {
         if(err){
             res.status(500).send(err)
         }else{
-            res.status(201).send(data)
+            io.emit('new-room',data)
         }
     })
 })
@@ -189,7 +215,16 @@ app.post('/login', (req, res) => {
     })
 })
 
-//listen
-app.listen(port, () => {
-    console.log(`listining on port ${port}`)
+app.get('/users/:id', (req, res) => {
+    Users.findOne({_id: req.params.id})
+    .select("-password")
+    .then(user=>{
+        res.json({user})
+    }).catch(err => {
+        return res.status(404).json({error: "User Not Found"})
+    })
 })
+//listen
+// app.listen(port, () => {
+//     console.log(`listining on port ${port}`)
+// })
