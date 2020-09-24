@@ -1,0 +1,41 @@
+.sidebarChat{
+    display: flex;
+    padding: 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f6f6f6;
+}
+
+a{
+    text-decoration: none !important;
+    color: black;
+}
+
+.sidebarChat:hover{
+    background-color: #ebebeb;
+}
+
+.sidebarChat__info > h2{
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+.sidebarChat__info{
+    margin-left: 15px;
+}
+
+.sidebarChat__current{
+    background-color: #ebebeb;
+}
+
+.new__chat{
+    position: sticky;
+    top: 0;
+    /* position: fixed; */
+    background-color: inherit;
+    z-index:1;
+    /* z-index: top; */
+}
+
+.MuiDialog-paper{
+    width: 300px;
+    text-align: center;
+}
