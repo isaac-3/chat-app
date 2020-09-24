@@ -72,7 +72,7 @@ const SidebarChat = ({id, name, addNewChat}) => {
     (
         <div>
             <Dialog open={roomPrompt} onClose={() => handleClose()} aria-labelledby="form-dialog-title">
-                    <DialogTitle id="form-dialog-title">Create A New room</DialogTitle>
+                    <DialogTitle id="form-dialog-title">Create A New Room</DialogTitle>
                     <DialogContent>
                         <TextField
                             value={newRoomName}
@@ -92,7 +92,7 @@ const SidebarChat = ({id, name, addNewChat}) => {
                     </DialogActions>
             </Dialog>
             <div className="sidebarChat new__chat" onClick={() => openPrompt()}>
-                <h2>add new chat</h2>
+                <h2>Create A New Room</h2>
             </div>
         </div>
 
