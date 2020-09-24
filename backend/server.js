@@ -100,7 +100,7 @@ app.get('/messages/sync', (req, res) => {
 app.patch('/messages/new', (req, res) => {
     const newMsg = {
         message: req.body.message,
-        name: req.body.name,
+        postedBy: req.body.postedBy,
         timestamp: req.body.timestamp
     }
     Rooms.findByIdAndUpdate(req.body.roomId, {
@@ -108,17 +108,17 @@ app.patch('/messages/new', (req, res) => {
     },{
         new: true
     })
-    .populate("messages")
+    .populate("messages.postedBy", "_id name")
     .exec((err, result)=>{
         if(err){
             return res.status(422).json({error: err})
         }else{
             const roomId = result._id
-            const {message, name, timestamp, _id} = result.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]
+            const {message, postedBy, timestamp, _id} = result.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]
             io.emit('new-msg',
                 {
                     message,
-                    name,
+                    postedBy: postedBy,
                     timestamp,
                     _id,
                     roomId
@@ -146,12 +146,14 @@ app.post('/rooms/new', (req, res) => {
             res.status(500).send(err)
         }else{
             io.emit('new-room',data)
+            res.status(201).send(data)
         }
     })
 })
 
 app.get('/rooms/:roomId', (req, res) => {
     Rooms.findOne({_id: req.params.roomId})
+    .populate("messages.postedBy", "_id name")
     .then(room => {
         res.json({room})
     }).catch(err => {
