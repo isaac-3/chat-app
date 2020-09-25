@@ -1,10 +1,11 @@
-import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@material-ui/core';
+import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, TextField } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import './SidebarChat.css'
 import axios from './axios'
 import { Link } from 'react-router-dom';
 import Pusher from 'pusher-js'
 import socketIo from 'socket.io-client'
+import Alert from '@material-ui/lab/Alert';
 
 const socket = socketIo('http://localhost:9000')
 
@@ -13,7 +14,9 @@ const SidebarChat = ({id, name, addNewChat}) => {
     const [seed, setSeed] = useState('')
     const [msgs, setMsgs] = useState([])
     const [newRoomName, setRoomName] = useState('')
+    const [newRoomTag, setRoomTag] = useState('')
     const [roomPrompt, setPrompt] = useState(false)
+    const [fields__open, setFieldOpen] = useState(false)
 
     useEffect(()=>{
         setSeed(Math.floor(Math.random() * 5000))
@@ -37,11 +40,21 @@ const SidebarChat = ({id, name, addNewChat}) => {
     const createChat = () => {
         if (newRoomName){
             axios.post('/rooms/new', {
-                name: newRoomName
+                name: newRoomName,
+                tag: newRoomTag
+            })
+            .then(res=> {
+                setRoomName('')
+                setRoomTag('')
+                setPrompt(false)
+                setFieldOpen(false)
+            })
+            .catch(err=> {
+                if(err){
+                    setFieldOpen(true)
+                }
             })
         }
-        setRoomName('')
-        setPrompt(false)
     }
 
     const openPrompt = () => {
@@ -53,9 +66,25 @@ const SidebarChat = ({id, name, addNewChat}) => {
         setPrompt(false)
     }
 
-    const roomName = (name) => {
-        setRoomName(name)
+    const handleKeyDown = e => {
+        if (e.key === " ") {
+          e.preventDefault();
+        }
+      };
+
+    const handleChange = e => {
+        if (e.includes(" ")) {
+            e = e.replace(/\s/g, "")
+        }
+        setRoomTag(e)
     }
+
+    const handleFieldClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setFieldOpen(false)
+    };
 
     return !addNewChat ? (
         <Link to={`/rooms/${id}`}>
@@ -76,9 +105,20 @@ const SidebarChat = ({id, name, addNewChat}) => {
                     <DialogContent>
                         <TextField
                             value={newRoomName}
-                            onChange={(e) => roomName(e.target.value)}
+                            onChange={(e) => setRoomName(e.target.value)}
                             autoFocus
                             label="Enter Your Room Name"
+                            fullWidth
+                        />
+                        {fields__open && <Alert variant="outlined" severity="error" style={{marginTop: '16px'}}>
+                            Please Add A Tag!
+                        </Alert>}
+                        <TextField
+                            style={{marginTop: '16px'}}
+                            value={newRoomTag}
+                            onChange={(e) => handleChange(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            label="Unique Tag"
                             fullWidth
                         />
                     </DialogContent>

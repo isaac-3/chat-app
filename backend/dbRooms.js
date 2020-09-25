@@ -3,10 +3,15 @@ const {ObjectId} = mongoose.Schema.Types
 
 const roomSchema = mongoose.Schema({
     name: String,
+    tag: {
+        type: String,
+        required: true
+    },
+    members:[{type: ObjectId, ref: "usercontents"}],
     messages:[{
         message: String,
         postedBy: {type: ObjectId, ref: "usercontents"},
-        timestamp : { 
+        timestamp: { 
             type : Date, 
             default: Date.now
         }
