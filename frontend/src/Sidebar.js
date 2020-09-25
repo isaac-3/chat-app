@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import './Sidebar.css';
 import DonutLargeIcon from '@material-ui/icons/DonutLarge';
 import ChatIcon from '@material-ui/icons/Chat';
-import {Avatar, ClickAwayListener, IconButton, MenuItem, MenuList, Paper, Popper} from '@material-ui/core'
+import {Avatar, Button, ClickAwayListener, IconButton, MenuItem, MenuList, Paper, Popper, TextField} from '@material-ui/core'
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchOutlined from '@material-ui/icons/SearchOutlined';
 import SidebarChat from './SidebarChat'
@@ -12,19 +13,42 @@ import { useStateValue } from './StateProvider';
 import socketIo from 'socket.io-client'
 import { useHistory } from 'react-router-dom';
 import { actionTypes } from './reducer';
+import Chat from './Chat';
 
 const socket = socketIo('http://localhost:9000')
 
 const Sidebar = ({allRooms}) => {
 
     const [rooms, setRooms] = useState(allRooms)
+    const [everyRoom, setEveryRooms] = useState([])
     const [{user}, dispatch] = useStateValue()
     const [userOpts, setOpts] = useState(false)
     const [anc, setAnc] = useState(null)
+    const [search, setSearch] = useState('')
     let history = useHistory()
+
+    useEffect(() => {
+        axios.get('/allrooms')
+        .then(res => {
+            let r = res.data.filter(room => {
+                return !user.rooms.includes(room._id)
+            })
+            setEveryRooms(r)
+        })
+    },[])
     
     socket.on('new-room', (newRoom) => {
-        setRooms([...rooms, newRoom])
+        setEveryRooms([...everyRoom, newRoom])
+    })
+
+    socket.on('join-room', (info) => {
+        if(info.newRoom.members.includes(user._id) && info.currUser === user._id){
+            setRooms([...rooms, info.newRoom])
+            const newSet = everyRoom.filter(room => {
+                return room._id !== info.newRoom._id
+            })
+            setEveryRooms(newSet)
+        }
     })
 
     const handleClose = () => {
@@ -44,12 +68,25 @@ const Sidebar = ({allRooms}) => {
         history.push('/login')
     }
 
+    const joinChat = () => {
+        axios.post("/joinroom",{
+            user,
+            tag: search
+        })
+        .then(res => {
+            localStorage.setItem("user", JSON.stringify(res.data.result))
+        })
+        setSearch('')
+    }
+
+    const autoFocus = true
+
     return (
         <div className='sidebar'>
             <Popper className='userOpts' open={userOpts} disablePortal placement='bottom-start' anchorEl={anc}>
                 <Paper >
                     <ClickAwayListener onClickAway={()=>handleClose()}>
-                        <MenuList autoFocusItem='true'>
+                        <MenuList autoFocusItem={autoFocus}>
                         <MenuItem>Profile</MenuItem>
                         <MenuItem>My account</MenuItem>
                         <MenuItem onClick={()=>logOut()}>Logout</MenuItem>
@@ -77,7 +114,20 @@ const Sidebar = ({allRooms}) => {
             <div className='sidebar__search'>
                 <div className='sidebar__searchContainer'>
                     <SearchOutlined/>
-                    <input placeholder='search chat' type='text'/>
+                    <Autocomplete
+                    inputValue={search}
+                    onInputChange={(e,n) => {
+                        setSearch(n)
+                    }}
+                    id="combo-box-demo"
+                    options={everyRoom}
+                    getOptionLabel={(rooms) => rooms.tag}
+                    style={{ flex: '1' }}
+                    renderInput={(params) => <TextField {...params} label="Open Rooms" style={{marginBottom: '14px'}}/>}
+                    />
+                    <Button onClick={() => joinChat()}>
+                        JOIN
+                    </Button>
                 </div>
             </div>
             <div className='sidebar__chats'>

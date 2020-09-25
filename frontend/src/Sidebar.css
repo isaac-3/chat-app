@@ -45,10 +45,19 @@
     padding: 10px;
 }
 
-.sidebar__searchContainer > input{
+/* .sidebar__searchContainer > input{
     border: none;
     outline-width: 0;
     margin-left: 10px;
+} */
+
+.sidebar__searchContainer > button{
+    margin-left: 10px;
+    background-color: green !important;
+}
+
+.sidebar__searchContainer > button:hover{
+    background-color: green !important;
 }
 
 .sidebar__chats{

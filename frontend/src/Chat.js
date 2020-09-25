@@ -1,4 +1,4 @@
-import { Avatar, IconButton } from '@material-ui/core';
+import { Avatar, debounce, IconButton } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import './Chat.css';
 import SearchOutlined from '@material-ui/icons/SearchOutlined';
@@ -22,6 +22,23 @@ const Chat = () => {
     const [roomName, setroomName] = useState('')
     const [msgs, setMsgs] = useState([])
     const [{user}, dispatch] = useStateValue()
+    const [isTyping, setTyping] = useState(false)
+    const [test, setTest] = useState('false')
+    
+    // const handleChange = (e) =>  {
+    //     setTyping(true)
+    //     // handleTyping()
+    //     // setInput(e)
+    //     setTimeout(() => {
+    //         setTyping(false)
+    //       }, 2000)
+    // }
+
+    // const handleTyping = debounce(function() {
+    //     // if(isTyping){
+    //         setTyping(false)
+    //     // }
+    //   }, 3000)
 
     useEffect(()=>{
         if(roomId){
@@ -49,13 +66,18 @@ const Chat = () => {
         }
     })
 
+
+    // const yup = (e) => {
+    //     setInput(e)
+    //     handleChange()
+    // }
     return (
         <div className='chat'>
             <div className="chat__header">
                 <Avatar />
                 <div className="chat__headerInfo">
                     <h3>{roomName}</h3>
-                    <p>last seen at ...</p>
+                    {/* {isTyping && "User is typing..."} */}
                 </div>
                 <div className="chat__headerRight">
                     <IconButton>
@@ -70,8 +92,8 @@ const Chat = () => {
                 </div>
             </div>
             <div className="chat__body">
-                {msgs.map(({postedBy, message, timestamp} )=> (
-                    <p className={`chat__message ${postedBy._id === user._id && "chat__receiver"}`}>
+                {msgs.map(({_id, postedBy, message, timestamp} )=> (
+                    <p key={_id} className={`chat__message ${postedBy._id === user._id && "chat__receiver"}`}>
                         <span className="chat__name">{postedBy.name}</span>
                         {message}
                         <span className="chat__timestamp">

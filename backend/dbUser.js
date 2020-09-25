@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+const {ObjectId} = mongoose.Schema.Types
 
 const userSchema = mongoose.Schema({
     name: {
@@ -13,6 +14,9 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    rooms:[
+        {type: ObjectId, ref: "roomcontents"}
+    ] 
 })
 
 export default mongoose.model('usercontents', userSchema)

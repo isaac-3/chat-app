@@ -128,8 +128,16 @@ app.patch('/messages/new', (req, res) => {
         }
     })
 })
+app.post('/rooms/sync', (req, res) => {
+    if(req.body.user){
+        Rooms.find({_id: {$in: req.body.user.rooms}})
+        .then(rooms=>{
+            res.status(200).send(rooms)
+        })
+    }
+})
 
-app.get('/rooms/sync', (req, res) => {
+app.get('/allrooms', (req, res) => {
     Rooms.find((err, data) => {
         if(err){
             res.status(500).send(err)
@@ -137,6 +145,32 @@ app.get('/rooms/sync', (req, res) => {
             res.status(200).send(data)
         }
     })
+})
+
+app.post('/joinroom', (req,res) => {
+    Rooms.findOneAndUpdate({tag: req.body.tag}, {
+        $push:{members: req.body.user._id}
+    },{
+        new: true
+    }, (err, newRoom) => {
+        if(err){
+            return res.status(422).json({error: err})
+        }
+        Users.findByIdAndUpdate(req.body.user._id, {
+            $push:{rooms: newRoom._id}
+        },{
+            new: true
+        })
+        .select("-password")
+        .then(result => {
+            res.json({result})
+        }).catch(err => {
+            return res.status(422).json({error: err})
+        })
+        const info = {newRoom, currUser: req.body.user._id}
+        io.emit('join-room',info)
+    })
+
 })
 
 app.post('/rooms/new', (req, res) => {
@@ -149,6 +183,7 @@ app.post('/rooms/new', (req, res) => {
             res.status(201).send(data)
         }
     })
+
 })
 
 app.get('/rooms/:roomId', (req, res) => {
@@ -205,8 +240,8 @@ app.post('/login', (req, res) => {
         bcrypt.compare(password, savedUser.password)
         .then(doMatch => {
             if(doMatch){
-                const {_id, name, email} = savedUser
-                res.json({user: {_id, name, email}})
+                const {_id, name, email, rooms} = savedUser
+                res.json({user: {_id, name, email, rooms}})
             }else{
                 return res.json({error: 'invalid email or pssword'})
             }
@@ -226,7 +261,3 @@ app.get('/users/:id', (req, res) => {
         return res.status(404).json({error: "User Not Found"})
     })
 })
-//listen
-// app.listen(port, () => {
-//     console.log(`listining on port ${port}`)
-// })

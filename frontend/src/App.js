@@ -29,12 +29,13 @@ function App() {
   },[])
 
   useEffect(() => {
-    axios.get('/rooms/sync')
+    axios.post('/rooms/sync',{
+      user: loggedUser
+    })
     .then(res=>{
       setRooms(res.data)
     })
-    
-},[])
+  },[])
 
   return (
     <div className="app">
