@@ -61,6 +61,9 @@ const Sidebar = ({allRooms}) => {
     }
 
     const logOut = () => {
+        axios.post('/logout',{
+            user: user
+        })
         localStorage.clear()
         dispatch({
             type: actionTypes.LOG_OUT
@@ -123,7 +126,7 @@ const Sidebar = ({allRooms}) => {
                     options={everyRoom}
                     getOptionLabel={(rooms) => rooms.tag}
                     style={{ flex: '1' }}
-                    renderInput={(params) => <TextField {...params} label="Open Rooms" style={{marginBottom: '14px'}}/>}
+                    renderInput={(params) => <TextField {...params} label="Join A Room" style={{marginBottom: '14px'}}/>}
                     />
                     <Button onClick={() => joinChat()}>
                         JOIN

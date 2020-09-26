@@ -188,7 +188,8 @@ app.post('/rooms/new', (req, res) => {
 
 app.get('/rooms/:roomId', (req, res) => {
     Rooms.findOne({_id: req.params.roomId})
-    .populate("messages.postedBy", "_id name")
+    .populate("messages.postedBy", "_id name online")
+    .populate("members", "_id name online")
     .then(room => {
         res.json({room})
     }).catch(err => {
@@ -232,7 +233,11 @@ app.post('/login', (req, res) => {
     if(!email || !password){
         return res.status(422).json({error: 'pls add email or password!'})
     }
-    Users.findOne({email: email})
+    Users.findOneAndUpdate({email: email}, {
+        online: true
+    },{
+        new: true
+    })
     .then(savedUser => {
         if(!savedUser){
             return res.json({error: 'User does not exist'})
@@ -240,8 +245,9 @@ app.post('/login', (req, res) => {
         bcrypt.compare(password, savedUser.password)
         .then(doMatch => {
             if(doMatch){
-                const {_id, name, email, rooms} = savedUser
-                res.json({user: {_id, name, email, rooms}})
+                const {_id, name, email, rooms, online} = savedUser
+                io.emit("user-login", {_id, name, email, online})
+                res.json({user: {_id, name, email, rooms, online}})
             }else{
                 return res.json({error: 'invalid email or pssword'})
             }
@@ -249,6 +255,18 @@ app.post('/login', (req, res) => {
         .catch(err => {
             console.log(err)
         })
+    })
+})
+
+app.post('/logout',(req, res) => {
+    Users.findByIdAndUpdate(req.body.user._id, {
+        online: false
+    },{
+        new: true
+    })
+    .then(user => {
+        io.emit("user-logout", user)
+        res.json({user})
     })
 })
 
