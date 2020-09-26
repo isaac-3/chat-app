@@ -14,6 +14,10 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    online: {
+        type: Boolean,
+        default: false
+    },
     rooms:[
         {type: ObjectId, ref: "roomcontents"}
     ] 

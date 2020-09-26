@@ -78,7 +78,7 @@ const Login = () => {
                 })
                 localStorage.setItem("user", JSON.stringify(data.data.user))
                 setSuccOpen(true)
-                history.push('/room')
+                history.push('/rooms')
             }
         }).catch(err => {
             setFieldOpen(true)

@@ -9,6 +9,7 @@ import Login from './Login';
 import { useStateValue } from './StateProvider';
 import Signup from './Signup';
 import { actionTypes } from './reducer';
+import Chatt from './Chatt'
 
 function App() {
   
@@ -27,6 +28,7 @@ function App() {
       })
     }
   },[])
+  //renderss
 
   useEffect(() => {
     axios.post('/rooms/sync',{
@@ -54,12 +56,12 @@ function App() {
           <Sidebar allRooms={allRooms}/>
           {/* <Chat /> */}
           <Switch>
-            <Route exact path="/rooms/:roomId">
+            <Route path="/rooms/:roomId">
               <Chat />
             </Route>
-            {/* <Route path="/rooms">
+            <Route path="/rooms">
               <Chat />
-            </Route> */}
+            </Route>
           </Switch>
         </Router>
       </div>
