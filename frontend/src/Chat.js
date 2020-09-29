@@ -8,12 +8,14 @@ import MoreVert from '@material-ui/icons/MoreVert';
 import InsertEmoticonIcon from '@material-ui/icons/InsertEmoticon';
 import MicIcon from '@material-ui/icons/Mic';
 import axios from './axios'
-import {useParams} from 'react-router-dom'
+import {useHistory, useParams} from 'react-router-dom'
 import { useStateValue } from './StateProvider';
 import Pusher from 'pusher-js'
 import socketIo from 'socket.io-client'
 import SendIcon from '@material-ui/icons/Send';
 import CloseIcon from '@material-ui/icons/Close';
+import Chatt from './Chatt';
+import { actionTypes } from './reducer';
 
 const socket = socketIo('http://localhost:9000')
 
@@ -29,23 +31,7 @@ const Chat = () => {
     const [memOpts, setmemOpts] = useState(false)
     const [anc, setAnc] = useState(null)
     const [seed, setSeed] = useState('')
-    const [isTyping, setTyping] = useState(false)
-    const [test, setTest] = useState('false')
-    
-    // const handleChange = (e) =>  {
-    //     setTyping(true)
-    //     // handleTyping()
-    //     // setInput(e)
-    //     setTimeout(() => {
-    //         setTyping(false)
-    //       }, 2000)
-    // }
-
-    // const handleTyping = debounce(function() {
-    //     // if(isTyping){
-    //         setTyping(false)
-    //     // }
-    //   }, 3000)
+    const history = useHistory()
 
     useEffect(()=>{
         setSeed(Math.floor(Math.random() * 5000))
@@ -72,31 +58,54 @@ const Chat = () => {
         setInput('')
     }
 
+    const changeInput = (e) => {
+        setInput(e)
+    }
+
     socket.on('new-msg', (newMsg) => {
         if(newMsg.roomId === roomId){
             setMsgs([...msgs, newMsg])
         }
+        socket.off('new-msg')
     })
 
-    socket.on("user-logout", logoutUser => {
-        let newSet = [...roomMembers]
-        let objIndex = newSet.findIndex((obj => obj._id === logoutUser._id))
-        if(newSet[objIndex] !== undefined){
-            newSet[objIndex].online = logoutUser.online
-            setroomMembers(newSet)
+    socket.on('join-room', (info) => {
+        if(roomId === info.newRoom._id){
+            setroomMembers(info.newRoom.members)
         }
     })
 
-    socket.on('user-login', loginUser => {
-        let newSet = [...roomMembers]
-        let objIndex = newSet.findIndex((obj => obj._id === loginUser._id))
-        if(newSet[objIndex] !== undefined){
-            newSet[objIndex].online = loginUser.online
-            setroomMembers(newSet)
+    socket.on("leave-room",(info) => {
+        if(roomId === info.leaveRoom._id){
+            setroomMembers(info.leaveRoom.members)
         }
     })
 
-    console.log(roomMembers)
+    useEffect(()=>{
+        socket.on("user-logout", logoutUser => {
+            let newSet = [...roomMembers]
+            let objIndex = newSet.findIndex((obj => obj._id === logoutUser._id))
+            if(newSet[objIndex] !== undefined){
+                newSet[objIndex].online = logoutUser.online
+                setroomMembers(newSet)
+            }
+        })
+        socket.off('user-logout')
+    },[roomMembers])
+    
+    useEffect(()=>{
+        socket.on('user-login', loginUser => {
+            let newSet = [...roomMembers]
+            let objIndex = newSet.findIndex((obj => obj._id === loginUser._id))
+            if(newSet[objIndex] !== undefined){
+                newSet[objIndex].online = loginUser.online
+                setroomMembers(newSet)
+            }
+        })
+        socket.off('user-login')
+    },[roomMembers])
+
+    console.log(roomId)
 
     const handleClose = () => {
         setOpts(false)
@@ -123,93 +132,113 @@ const Chat = () => {
         },
       }))(Badge);
 
-    const autoFocus = true
-    // const yup = (e) => {
-    //     setInput(e)
-    //     handleChange()
-    // }
+    const leaveRoom = () => {
+        axios.patch('/leaveroom',{
+            user,
+            roomId: roomId
+        })
+        .then(res=>{
+            dispatch({
+                type: actionTypes.SET_USER,
+                user: res.data.result
+            })
+            localStorage.setItem("user", JSON.stringify(res.data.result))
+        })
+        history.push('/rooms')
+    }
+
     return (
-        <div className='chat'>
-            <Dialog open={memOpts} onClose={() => handleCloseMembers()} aria-labelledby="form-dialog-title">
-                    <MuiDialogTitle id="form-dialog-title">Members
-                        <IconButton style={{float: "right", padding: "4px"}}  onClick={() => handleCloseMembers()}>
-                            <CloseIcon />
+        // roomId !== undefined ? (
+                    <div className='chat'>
+                                <Dialog open={memOpts} onClose={() => handleCloseMembers()} aria-labelledby="form-dialog-title">
+                        <MuiDialogTitle id="form-dialog-title">Members
+                            <IconButton style={{float: "right", padding: "4px"}}  onClick={() => handleCloseMembers()}>
+                                <CloseIcon />
+                            </IconButton>
+                        </MuiDialogTitle>
+                        <List >
+                        {roomMembers.map(member => (
+                            <ListItem key={member._id} button style={{textAlign: "center"}}>
+                                <ListItemAvatar>
+                                <StyledBadge
+                                    overlap="circle"
+                                    anchorOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'right',
+                                    }}
+                                    variant={member.online ? "dot" : null}
+                                    // variant={user.online && user._id === member._id ? "dot" : null}
+                                >
+                                    <Avatar src={`https://avatars.dicebear.com/api/avataaars/${seed}.svg`}/>
+                                </StyledBadge>
+                                </ListItemAvatar>
+                                <ListItemText primary={member.name} style={{float: "left", fontWeight: "900"}}/>
+                            </ListItem>
+                        ))}
+                        </List>
+                </Dialog>
+                <Popper className='userOpts' open={userOpts} disablePortal placement='bottom-start' anchorEl={anc}>
+                    <Paper >
+                        <ClickAwayListener onClickAway={()=>handleClose()}>
+                            <MenuList autoFocusItem={true}>
+                            <MenuItem
+                                onClick={() => openmemOpts()}
+                            >View Members</MenuItem>
+                            <MenuItem
+                                onClick={() => leaveRoom()}
+                            >Leave Grpup</MenuItem>
+                            </MenuList>
+                        </ClickAwayListener>
+                    </Paper>
+                </Popper>
+                <div className="chat__header">
+                    <Avatar />
+                    <div className="chat__headerInfo">
+                        <h3>{roomName}</h3>
+                        {/* {isTyping && "User is typing..."} */}
+                    </div>
+                    <div className="chat__headerRight">
+                        <IconButton>
+                            <SearchOutlined />
                         </IconButton>
-                    </MuiDialogTitle>
-                    <List >
-                    {roomMembers.map(member => (
-                        <ListItem key={member._id} button style={{textAlign: "center"}}>
-                            <ListItemAvatar>
-                            <StyledBadge
-                                overlap="circle"
-                                anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'right',
-                                }}
-                                variant={member.online ? "dot" : null}
-                                // variant={user.online && user._id === member._id ? "dot" : null}
-                            >
-                                <Avatar src={`https://avatars.dicebear.com/api/avataaars/${seed}.svg`}/>
-                            </StyledBadge>
-                            </ListItemAvatar>
-                            <ListItemText primary={member.name} style={{float: "left", fontWeight: "900"}}/>
-                        </ListItem>
+                        <IconButton>
+                            <AttachFile />
+                        </IconButton>
+                        <IconButton onClick={(e) => openOpts(e.target)}>
+                            <MoreVert />
+                        </IconButton>
+                    </div>
+                </div>
+                <div className="chat__body">
+                {/* <div style={{width: "100px", height: "100px", backgroundColor: "red", zIndex: '1', marginLeft: "auto", marginRight: "auto", alignItems:"center"}}>
+                </div> */}
+                
+                    {msgs.map(({_id, postedBy, message, timestamp} )=> (
+                        <p key={_id} className={`chat__message ${postedBy._id === user._id && "chat__receiver"}`}>
+                            <span className="chat__name">{postedBy.name}</span>
+                            {message}
+                            <span className="chat__timestamp">
+                                {timestamp}
+                            </span>
+                        </p>
                     ))}
-                    </List>
-            </Dialog>
-            <Popper className='userOpts' open={userOpts} disablePortal placement='bottom-start' anchorEl={anc}>
-                <Paper >
-                    <ClickAwayListener onClickAway={()=>handleClose()}>
-                        <MenuList autoFocusItem={autoFocus}>
-                        <MenuItem
-                            onClick={() => openmemOpts()}
-                        >View Members</MenuItem>
-                        </MenuList>
-                    </ClickAwayListener>
-                </Paper>
-            </Popper>
-            <div className="chat__header">
-                <Avatar />
-                <div className="chat__headerInfo">
-                    <h3>{roomName}</h3>
-                    {/* {isTyping && "User is typing..."} */}
                 </div>
-                <div className="chat__headerRight">
-                    <IconButton>
-                        <SearchOutlined />
-                    </IconButton>
-                    <IconButton>
-                        <AttachFile />
-                    </IconButton>
-                    <IconButton onClick={(e) => openOpts(e.target)}>
-                        <MoreVert />
-                    </IconButton>
+                <div className="chat__footer">
+                    <InsertEmoticonIcon/>
+                    <form>
+                        <input value={input} onChange={e=> changeInput(e.target.value)} placeholder="Type A Message" type="text"/>
+                        <IconButton type="submit" onClick={(e) =>sendMessage(e)}>
+                            <SendIcon/>
+                        </IconButton>
+                    </form>
+                    <MicIcon/>
                 </div>
-            </div>
-            <div className="chat__body">
-            {/* <div style={{width: "100px", height: "100px", backgroundColor: "red", zIndex: '1', marginLeft: "auto", marginRight: "auto", alignItems:"center"}}>
-            </div> */}
-                {msgs.map(({_id, postedBy, message, timestamp} )=> (
-                    <p key={_id} className={`chat__message ${postedBy._id === user._id && "chat__receiver"}`}>
-                        <span className="chat__name">{postedBy.name}</span>
-                        {message}
-                        <span className="chat__timestamp">
-                            {timestamp}
-                        </span>
-                    </p>
-                ))}
-            </div>
-            <div className="chat__footer">
-                <InsertEmoticonIcon/>
-                <form>
-                    <input value={input} onChange={e=> setInput(e.target.value)} placeholder="Type A Message" type="text"/>
-                    <IconButton type="submit" onClick={(e) =>sendMessage(e)}>
-                        <SendIcon/>
-                    </IconButton>
-                </form>
-                <MicIcon/>
-            </div>
-        </div>
+                    </div>
+        // ) : (
+        //     // <div style={{display: roomId !== undefined ? "none" : null}}>
+        //         <Chatt/>
+        //     // </div>
+        // )
     );
 }
  

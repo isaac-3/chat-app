@@ -22,11 +22,16 @@ const SidebarChat = ({id, name, addNewChat}) => {
         setSeed(Math.floor(Math.random() * 5000))
     },[])
 
-    socket.on('new-msg', (newMsg) => {
-        if(newMsg.roomId === id){
-            setMsgs(newMsg)
-        }
-    })
+    useEffect(() =>{
+        socket.on('new-msg', (newMsg) => {
+            if(newMsg.roomId === id){
+                setMsgs(newMsg)
+            }
+        })
+        // socket.off('new-msg')
+    },[msgs])
+
+
 
     useEffect(() => {
         if(id){

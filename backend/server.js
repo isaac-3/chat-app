@@ -128,6 +128,7 @@ app.patch('/messages/new', (req, res) => {
         }
     })
 })
+
 app.post('/rooms/sync', (req, res) => {
     if(req.body.user){
         Rooms.find({_id: {$in: req.body.user.rooms}})
@@ -169,8 +170,34 @@ app.post('/joinroom', (req,res) => {
         })
         const info = {newRoom, currUser: req.body.user._id}
         io.emit('join-room',info)
-    })
+    }).populate("members", "_id name online")
 
+})
+
+app.patch('/leaveroom', (req,res) => {
+    Rooms.findByIdAndUpdate(req.body.roomId, {
+        $pull:{members: req.body.user._id}
+    },{
+        new: true
+    }, (err, leaveRoom) => {
+        if(err){
+            return res.status(422).json({error: err})
+        }
+        Users.findByIdAndUpdate(req.body.user._id, {
+            $pull:{rooms: leaveRoom._id}
+        },{
+            new: true
+        })
+        .select("-password")
+        .populate("rooms","_id name tag members messages")
+        .then(result => {
+            const info = {leaveRoom, currUser: result}
+            io.emit('leave-room',info)
+            res.json({result})
+        }).catch(err => {
+            return res.status(422).json({error: err})
+        })
+    }).populate("members", "_id name online")
 })
 
 app.post('/rooms/new', (req, res) => {
