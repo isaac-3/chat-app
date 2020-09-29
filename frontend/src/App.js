@@ -10,6 +10,9 @@ import { useStateValue } from './StateProvider';
 import Signup from './Signup';
 import { actionTypes } from './reducer';
 import Chatt from './Chatt'
+// import socketIo from 'socket.io-client'
+
+// const socket = socketIo('http://localhost:9000')
 
 function App() {
   
@@ -31,41 +34,41 @@ function App() {
   //renderss
 
   useEffect(() => {
+    if(loggedUser){
     axios.post('/rooms/sync',{
       user: loggedUser
     })
     .then(res=>{
       setRooms(res.data)
     })
+  }
   },[])
+
+  
 
   return (
     <div className="app">
+      <Router >
       {!user ? (
-        <Router>
+        <div>
           <Route exact path="/login">
             <Login/>
           </Route>
             <Route exact path="/signup">
             <Signup/>
           </Route>
-        </Router>
+        </div>
+          
       ) : (
         <div className="app__body">
-        <Router>
+        {/* <Router> */}
           <Sidebar allRooms={allRooms}/>
           {/* <Chat /> */}
-          <Switch>
-            <Route path="/rooms/:roomId">
-              <Chat />
-            </Route>
-            <Route path="/rooms">
-              <Chat />
-            </Route>
-          </Switch>
-        </Router>
+          <Route exact path="/rooms/:roomId" component={Chat}/>
+          <Route exact path="/rooms" component={Chatt}/>
       </div>
       )}
+      </Router>
     </div>
   );
 }

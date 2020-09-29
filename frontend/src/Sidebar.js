@@ -37,19 +37,67 @@ const Sidebar = ({allRooms}) => {
         })
     },[])
     
-    socket.on('new-room', (newRoom) => {
-        setEveryRooms([...everyRoom, newRoom])
-    })
+    useEffect(()=>{
+        socket.on('new-room', (newRoom) => {
+            setEveryRooms([...everyRoom, newRoom])
+        })
+        // socket.off('new-room')
+    },[everyRoom])
 
-    socket.on('join-room', (info) => {
-        if(info.newRoom.members.includes(user._id) && info.currUser === user._id){
-            setRooms([...rooms, info.newRoom])
-            const newSet = everyRoom.filter(room => {
-                return room._id !== info.newRoom._id
-            })
-            setEveryRooms(newSet)
-        }
-    })
+
+    // useEffect(() => {
+    //     socket.on('join-room', (info) => {
+    //         console.log(info)
+    //         if(info.newRoom.members.includes(user._id) && info.currUser === user._id){
+    //             setRooms([...rooms, info.newRoom])
+    //             const newSet = everyRoom.filter(room => {
+    //                 return room._id !== info.newRoom._id
+    //             })
+    //             setEveryRooms(newSet)
+    //         }
+    //     })
+    //     // socket.off('join-room')
+    // },[rooms])
+
+    useEffect(() => {
+        socket.on('join-room', (info) => {
+            if(info.newRoom.members.some(e => e._id === user._id) && info.currUser === user._id){
+                if (!(rooms.some(e => e._id === info.newRoom._id))) {
+                    setRooms([...rooms, info.newRoom])
+                  }
+                const newSet = everyRoom.filter(room => {
+                    return room._id !== info.newRoom._id
+                })
+                setEveryRooms(newSet)
+            }
+        })
+        // socket.off('join-room')
+    },[rooms])
+    // useEffect(() => {
+    //     socket.on('join-room', (info) => {
+    //         if(info.newRoom.members.includes(user._id) && info.currUser === user._id){
+    //             if (!(rooms.some(e => e._id === info.newRoom._id))) {
+    //                 console.log("poop")
+    //                 setRooms([...rooms, info.newRoom])
+    //               }
+    //             const newSet = everyRoom.filter(room => {
+    //                 return room._id !== info.newRoom._id
+    //             })
+    //             setEveryRooms(newSet)
+    //         }
+    //     })
+    //     // socket.off('join-room')
+    // },[rooms])
+
+    useEffect(() => {
+        socket.on("leave-room",(info) => {
+            if(user._id === info.currUser._id){
+                setRooms(info.currUser.rooms)
+                setEveryRooms([...everyRoom, info.leaveRoom]) 
+            }
+        })
+    },[rooms])
+
 
     const handleClose = () => {
         setOpts(false)

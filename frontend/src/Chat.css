@@ -35,6 +35,8 @@
 }
 
 .chat__message{
+    /* max-width: 50%; */
+    word-wrap: break-word;
     position: relative;
     font-size: 16px;
     padding: 10px;
