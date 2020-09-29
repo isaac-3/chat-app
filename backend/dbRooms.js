@@ -11,6 +11,7 @@ const roomSchema = mongoose.Schema({
     messages:[{
         message: String,
         postedBy: {type: ObjectId, ref: "usercontents"},
+        deletedBy: [{type: ObjectId, ref: "usercontents"}],
         timestamp: { 
             type : Date, 
             default: Date.now

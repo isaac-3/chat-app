@@ -114,14 +114,15 @@ app.patch('/messages/new', (req, res) => {
             return res.status(422).json({error: err})
         }else{
             const roomId = result._id
-            const {message, postedBy, timestamp, _id} = result.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]
+            const {message, postedBy, timestamp, _id, deletedBy} = result.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]
             io.emit('new-msg',
                 {
                     message,
                     postedBy: postedBy,
                     timestamp,
                     _id,
-                    roomId
+                    roomId,
+                    deletedBy
                 }
             )
             res.json(result)
@@ -213,12 +214,15 @@ app.post('/rooms/new', (req, res) => {
 
 })
 
-app.get('/rooms/:roomId', (req, res) => {
+app.get('/rooms/:roomId/:userId', (req, res) => {
     Rooms.findOne({_id: req.params.roomId})
     .populate("messages.postedBy", "_id name online")
+    .populate("messages.deletedBy", "_id")
     .populate("members", "_id name online")
     .then(room => {
-        res.json({room})
+        const copy = [...room.messages]
+        const lastMSgs = copy.filter(x => !(x.deletedBy.some(e => e._id !== req.params.userId)))
+        res.json({room, lastMSgs})
     }).catch(err => {
         return res.status(404).json({error: "Room Not Found"})
     })
@@ -305,4 +309,42 @@ app.get('/users/:id', (req, res) => {
     }).catch(err => {
         return res.status(404).json({error: "User Not Found"})
     })
+})
+
+app.patch('/delmsg', (req, res) => {
+    let userId = req.body.user._id
+    let roomId = req.body.roomId
+    Rooms.findOneAndUpdate(
+        { _id: req.body.roomId, "messages._id":  req.body.msgId},
+        { $push: { "messages.$.deletedBy" : req.body.user._id }},{new: true}
+     )
+     .populate("messages.postedBy", "_id name online")
+     .populate("messages.deletedBy", "_id")
+     .then(room=>{
+         const copy = [...room.messages]
+         const lastMsgEdit = copy.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)
+         const lastMSg = lastMsgEdit.filter(x => !(x.deletedBy.some(e => e._id !== req.body.user._id)))[0]
+         io.emit('del-msg', {
+            lastMSg,
+            roomId,
+            userId
+         })
+        res.json({room, userId})
+     })
+})
+
+app.patch('/editmsg', (req, res) => {
+    // console.log(req.body)
+    Rooms.findOneAndUpdate(
+        { _id: req.body.roomId, "messages._id":  req.body.msgId},
+        { "messages.$.message": req.body.prevMsg},{new: true}
+     )
+     .populate("messages.postedBy", "_id name online")
+     .populate("messages.deletedBy", "_id")
+     .then(room=>{
+         io.emit('edit-msg', {
+             room
+         })
+        res.json({room})
+     })
 })
