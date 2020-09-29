@@ -6,11 +6,13 @@ import { Link } from 'react-router-dom';
 import Pusher from 'pusher-js'
 import socketIo from 'socket.io-client'
 import Alert from '@material-ui/lab/Alert';
+import { useStateValue } from './StateProvider';
 
 const socket = socketIo('http://localhost:9000')
 
 const SidebarChat = ({id, name, addNewChat}) => {
-
+    
+    const [{ user }, dispatch] = useStateValue();
     const [seed, setSeed] = useState('')
     const [msgs, setMsgs] = useState([])
     const [newRoomName, setRoomName] = useState('')
@@ -28,16 +30,31 @@ const SidebarChat = ({id, name, addNewChat}) => {
                 setMsgs(newMsg)
             }
         })
-        // socket.off('new-msg')
+        return () => {
+            socket.off("new-msg");
+         }
     },[msgs])
 
-
+    socket.on("edit-msg", (room) => {
+        if (id === room.room._id) {
+          setMsgs(room.room.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]);
+        }
+    });
+    useEffect(()=> {
+        socket.on("del-msg", (lastMSg) => {
+            if (id === lastMSg.roomId && lastMSg.userId === user._id) {
+                setMsgs(lastMSg.lastMSg);
+            }
+        });
+    },[msgs])
+    
 
     useEffect(() => {
         if(id){
-            axios.get(`/rooms/${id}`)
+            axios.get(`/rooms/${id}/${user._id}`)
             .then(room=>{
-                setMsgs(room.data.room.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0])
+                console.log(room.data.lastMSgs)
+                setMsgs(room.data.lastMSgs.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0])
             })
         }
     },[id])
