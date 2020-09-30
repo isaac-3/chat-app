@@ -29,7 +29,7 @@
 }
 
 .signup__manuel > input{
-    margin-top: 8px;
+    margin-top: 16px;
     border: 1px solid lightgrey;
     outline-width: 0;
     flex: 1;
@@ -38,9 +38,9 @@
 }
 
 .signup__manuel > button {
-    margin-top: 8px;
+    margin-top: 16px;
     text-transform: inherit !important;
-    background-color: #0a8d48 !important;
+    background-color: #37a4fd !important;
     color: white;
 }
 .signup__text{
@@ -49,4 +49,8 @@
 
 .signup__alert{
     margin-top: 100px;
+}
+
+.logo_icon{
+    color: #37a4fd;
 }

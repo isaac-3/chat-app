@@ -44,7 +44,7 @@ const Sidebar = ({allRooms}) => {
         // socket.off('new-room')
     },[everyRoom])
 
-    useEffect(() => {
+    // useEffect(() => {
         socket.on('join-room', (info) => {
             if(info.newRoom.members.some(e => e._id === user._id) && info.currUser === user._id){
                 if (!(rooms.some(e => e._id === info.newRoom._id))) {
@@ -56,7 +56,7 @@ const Sidebar = ({allRooms}) => {
                 setEveryRooms(newSet)
             }
         })
-    },[rooms])
+    // },[rooms])
 
     useEffect(() => {
         socket.on("leave-room",(info) => {
@@ -88,7 +88,8 @@ const Sidebar = ({allRooms}) => {
         history.push('/login')
     }
 
-    const joinChat = () => {
+    const joinChat = (e) => {
+        e.preventDefault()
         axios.post("/joinroom",{
             user,
             tag: search
@@ -145,7 +146,7 @@ const Sidebar = ({allRooms}) => {
                     style={{ flex: '1' }}
                     renderInput={(params) => <TextField {...params} label="Join A Room" style={{marginBottom: '14px'}}/>}
                     />
-                    <Button onClick={() => joinChat()}>
+                    <Button onClick={(e) => joinChat(e)}>
                         JOIN
                     </Button>
                 </div>

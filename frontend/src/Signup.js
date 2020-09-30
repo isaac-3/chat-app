@@ -5,6 +5,7 @@ import './Signup.css'
 import axios from './axios'
 import Alert from '@material-ui/lab/Alert';
 import Snackbar from '@material-ui/core/Snackbar';
+import ForumIcon from '@material-ui/icons/Forum';
 
 const Signup = () => {
 
@@ -91,7 +92,8 @@ const Signup = () => {
                 </Alert>
             </Snackbar>
             <div className="signup__container">
-                <img src="https://www.kindpng.com/picc/m/74-747955_redes-sociales-logos-png-whatsapp-logo-png-transparent.png" alt=""/>
+                {/* <img src="https://www.kindpng.com/picc/m/74-747955_redes-sociales-logos-png-whatsapp-logo-png-transparent.png" alt=""/> */}
+                <ForumIcon style={{fontSize: "100px"}} className=" logo_icon"/>
                 <div className="signup__manuel">
                     <input
                     type="text"
