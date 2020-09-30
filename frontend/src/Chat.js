@@ -235,6 +235,8 @@ useEffect(() => {
     setEditMsg(false)
   }
 
+  // console.log(roomMembers)
+
   return (
     <div className="chat">
       <Dialog

@@ -30,9 +30,6 @@ const SidebarChat = ({id, name, addNewChat}) => {
                 setMsgs(newMsg)
             }
         })
-        return () => {
-            socket.off("new-msg");
-         }
     },[msgs])
 
     socket.on("edit-msg", (room) => {

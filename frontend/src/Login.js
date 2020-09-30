@@ -8,6 +8,7 @@ import {Link, useHistory} from 'react-router-dom'
 import axios from './axios'
 import Alert from '@material-ui/lab/Alert';
 import Snackbar from '@material-ui/core/Snackbar';
+import ForumIcon from '@material-ui/icons/Forum';
 
 const Login = () => {
 
@@ -15,17 +16,9 @@ const Login = () => {
     const [password, setPassword] = useState('')
     const [email, setEmail] = useState('')
     const history = useHistory()
-    const [success__open, setSuccOpen] = useState(false)
     const [err__open, setErrOpen] = useState(false)
     const [fields__open, setFieldOpen] = useState(false)
     const [exist__open, setExsistOpen] = useState(false)
-
-    const handleSuccClose = (event, reason) => {
-        if (reason === 'clickaway') {
-          return;
-        }
-        setSuccOpen(false)
-      };
 
     const handleErrClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -48,17 +41,6 @@ const Login = () => {
         setExsistOpen(false)
     };
 
-    const signIn = () => {
-        auth.signInWithPopup(provider)
-        .then(res => {
-            dispatch({
-                type: actionTypes.SET_USER,
-                user: res.user
-            })
-            history.push('/rooms')
-        }).catch(err => alert(err.message))
-    }
-
     const postdata = () => {
         if(!/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email)){
             setErrOpen(true)
@@ -77,7 +59,6 @@ const Login = () => {
                     user: data.data.user
                 })
                 localStorage.setItem("user", JSON.stringify(data.data.user))
-                setSuccOpen(true)
                 history.push('/rooms')
             }
         }).catch(err => {
@@ -97,18 +78,14 @@ const Login = () => {
                     Invalid Email!
                 </Alert>
             </Snackbar>
-            <Snackbar open={success__open} autoHideDuration={3000} onClose={handleSuccClose} anchorOrigin={{ vertical: "top", horizontal: "center" }} className="signup__alert">
-                <Alert variant="outlined" severity="success">
-                    Successfully Logged In!
-                </Alert>
-            </Snackbar>
             <Snackbar open={exist__open} autoHideDuration={3000} onClose={handleExistClose} anchorOrigin={{ vertical: "top", horizontal: "center" }} className="signup__alert">
                 <Alert variant="outlined" severity="error">
                     Incorrect Email Or Password
                 </Alert>
             </Snackbar>
             <div className="login__container">
-                <img src="https://www.kindpng.com/picc/m/74-747955_redes-sociales-logos-png-whatsapp-logo-png-transparent.png" alt=""/>
+                {/* <img src="https://www.kindpng.com/picc/m/74-747955_redes-sociales-logos-png-whatsapp-logo-png-transparent.png" alt=""/> */}
+                <ForumIcon style={{fontSize: "100px"}} className=" logo_icon"/>
                 <div className="login__manuel">
                     <input
                     type="text"
@@ -127,7 +104,6 @@ const Login = () => {
                     >Login</Button>
                     <h5 className="login__text"><Link to='/signup'>Dont have an account ? Sign Up!</Link></h5>
                 </div>
-                <Button onClick={signIn}>Sign In With Google</Button>
             </div>
         </div>
     );
