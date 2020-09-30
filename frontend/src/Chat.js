@@ -58,7 +58,6 @@ const Chat = () => {
   const [postBy, setPostBy] = useState(null);
   const [editMsg, setEditMsg] = useState(false);
   const [prevMsg, setPrevMsg] = useState('');
-//   const [newEditMsg, setNewEditMsg] = useState('');
 
   useEffect(() => {
     setSeed(Math.floor(Math.random() * 5000));
@@ -70,7 +69,7 @@ const Chat = () => {
       .then((room) => {
         setroomName(room.data.room.name);
         setroomMembers(room.data.room.members);
-        setMsgs(room.data.room.messages);
+        setMsgs(room.data.room.messages)
       });
     }
   }, [roomId]);
@@ -116,13 +115,11 @@ useEffect(() => {
   }); 
 },[roomMembers])
  
-
   socket.on("edit-msg", (room) => {
     if (roomId === room.room._id) {
       setMsgs(room.room.messages);
     }
   });
-
 
   useEffect(() => {
     socket.on("user-logout", (logoutUser) => {
@@ -211,8 +208,9 @@ useEffect(() => {
           user
       })
       .then(res=> {
-          if(res.data.room._id === roomId && res.data.userId === user._id){
-              setMsgs(res.data.room.messages)
+          if(res.data.roomId=== roomId && res.data.userId === user._id){
+            const lastMSgArr = res.data.room.messages.filter(x => !(x.deletedBy.some(e => e._id === res.data.userId)))
+              setMsgs(lastMSgArr)
           }
       })
       setMsgOpts(false)
@@ -236,8 +234,6 @@ useEffect(() => {
     })
     setEditMsg(false)
   }
-
-  console.log(roomId)
 
   return (
     <div className="chat">

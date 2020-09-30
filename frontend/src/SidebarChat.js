@@ -40,21 +40,33 @@ const SidebarChat = ({id, name, addNewChat}) => {
           setMsgs(room.room.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]);
         }
     });
+    
     useEffect(()=> {
         socket.on("del-msg", (lastMSg) => {
             if (id === lastMSg.roomId && lastMSg.userId === user._id) {
-                setMsgs(lastMSg.lastMSg);
+                const copy = lastMSg.room.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)
+                const x = copy.filter(x => !(x.deletedBy.some(e => e._id === lastMSg.userId)))[0]
+                setMsgs(x)
             }
         });
     },[msgs])
     
 
+    // useEffect(() => {
+    //     if(id){
+    //         axios.get(`/rooms/${id}/${user._id}`)
+    //         .then(room=>{
+    //             setMsgs(room.data.lastMSgs.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0])
+    //         })
+    //     }
+    // },[id])
     useEffect(() => {
         if(id){
             axios.get(`/rooms/${id}/${user._id}`)
             .then(room=>{
-                console.log(room.data.lastMSgs)
-                setMsgs(room.data.lastMSgs.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0])
+                const copy = room.data.room.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)
+                const x = copy.filter(x => !(x.deletedBy.some(e => e._id === room.data.userId)))[0]
+                setMsgs(x)
             })
         }
     },[id])

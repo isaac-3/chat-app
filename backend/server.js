@@ -215,6 +215,7 @@ app.post('/rooms/new', (req, res) => {
 })
 
 app.get('/rooms/:roomId/:userId', (req, res) => {
+    const userId = req.params.userId
     Rooms.findOne({_id: req.params.roomId})
     .populate("messages.postedBy", "_id name online")
     .populate("messages.deletedBy", "_id")
@@ -222,7 +223,7 @@ app.get('/rooms/:roomId/:userId', (req, res) => {
     .then(room => {
         const copy = [...room.messages]
         const lastMSgs = copy.filter(x => !(x.deletedBy.some(e => e._id !== req.params.userId)))
-        res.json({room, lastMSgs})
+        res.json({room, lastMSgs, userId})
     }).catch(err => {
         return res.status(404).json({error: "Room Not Found"})
     })
@@ -324,12 +325,15 @@ app.patch('/delmsg', (req, res) => {
          const copy = [...room.messages]
          const lastMsgEdit = copy.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)
          const lastMSg = lastMsgEdit.filter(x => !(x.deletedBy.some(e => e._id !== req.body.user._id)))[0]
+         const lastMSgArr = room.messages.filter(x => !(x.deletedBy.some(e => e._id !== req.body.user._id)))
          io.emit('del-msg', {
+             room,
             lastMSg,
             roomId,
-            userId
+            userId,
+            lastMSgArr
          })
-        res.json({room, userId})
+        res.json({room, lastMSgArr, userId, roomId })
      })
 })
 
