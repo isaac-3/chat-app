@@ -17,17 +17,19 @@ a{
 .sidebarChat__info > h2{
     font-size: 16px;
     margin-bottom: 8px;
+    font-family: 'Poppins', sans-serif;
 }
 .sidebarChat__info{
     margin-left: 15px;
 }
 
-/* .sidebarChat__info > p{
+.sidebarChat__info > p{
+    font-family: 'Poppins', sans-serif;
     width: 15ch;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-} */
+}
 
 .sidebarChat__current{
     background-color: #ebebeb;
@@ -39,6 +41,7 @@ a{
     /* position: fixed; */
     background-color: inherit;
     z-index:1;
+    font-family: 'Poppins', sans-serif;
     /* z-index: top; */
 }
 

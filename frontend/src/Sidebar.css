@@ -61,6 +61,8 @@
 .sidebar__searchContainer > button{
     margin-left: 10px;
     background-color: #37a4fd !important;
+    font-family: 'Poppins', sans-serif;
+    font-weight: bold;
 }
 
 .sidebar__searchContainer > button:hover{

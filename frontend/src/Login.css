@@ -41,6 +41,7 @@
     flex: 1;
     border-radius: 30px;
     padding: 10px;
+    font-family: 'Poppins', sans-serif;
 }
 
 .login__manuel > button {
@@ -48,10 +49,13 @@
     text-transform: inherit !important;
     background-color: #37a4fd !important;
     color: white;
+    font-family: 'Poppins', sans-serif;
+    font-weight: bold;
 }
 
 .login__manuel > h5 {
     margin-top: 16px;
+    font-family: 'Poppins', sans-serif;
 }
 
 .login__text{

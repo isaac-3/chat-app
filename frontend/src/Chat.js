@@ -38,9 +38,10 @@ import CloseIcon from "@material-ui/icons/Close";
 import Chatt from "./Chatt";
 import { actionTypes } from "./reducer";
 
-const socket = socketIo("http://localhost:9000");
 
 const Chat = () => {
+
+  const socket = socketIo("http://localhost:9000");
   const [input, setInput] = useState("");
   const { roomId } = useParams();
   const [roomName, setroomName] = useState("");
@@ -58,6 +59,8 @@ const Chat = () => {
   const [postBy, setPostBy] = useState(null);
   const [editMsg, setEditMsg] = useState(false);
   const [prevMsg, setPrevMsg] = useState('');
+  const [focus, setFocus] = useState(false);
+  const [type, setType] = useState(null);
 
   useEffect(() => {
     setSeed(Math.floor(Math.random() * 5000));
@@ -82,6 +85,7 @@ const Chat = () => {
       roomId: roomId,
     });
     setInput("");
+    setFocus(false)
   };
 
   const changeInput = (e) => {
@@ -115,11 +119,17 @@ useEffect(() => {
   }); 
 },[roomMembers])
  
-  socket.on("edit-msg", (room) => {
-    if (roomId === room.room._id) {
-      setMsgs(room.room.messages);
-    }
-  });
+useEffect(()=>{
+    socket.on("edit-msg", (room) => {
+      if (roomId === room.room._id) {
+        setMsgs(room.room.messages)
+      }
+    })
+    return () => {
+      socket.off("edit-msg");
+   }
+},[prevMsg])
+
 
   useEffect(() => {
     socket.on("user-logout", (logoutUser) => {
@@ -235,7 +245,36 @@ useEffect(() => {
     setEditMsg(false)
   }
 
-  // console.log(roomMembers)
+  const isTyping = () => {
+    if(focus && input.length > 1){
+      socket.emit('SEND_MESSAGE', {
+          userName: user.name,
+          userId: user._id
+      });
+    }else{
+      socket.emit('SEND_MESSAGE', {
+        userName: 'unknown',
+        userId: 'unknown'
+      });
+    }
+  }
+  
+  useEffect(()=>{
+    socket.on('RECEIVE_MESSAGE', (u) => {
+        let x = document.querySelector(".curr_typing")
+        x.innerHTML = `${u.data.userName} is typing ...`
+        setType(u)
+    });
+    return () => {
+      socket.off("RECEIVE_MESSAGE");
+   }
+  },[input])
+
+  const cc = () => {
+    setFocus(false)
+    setType(null)
+    isTyping()
+  }
 
   return (
     <div className="chat">
@@ -343,7 +382,9 @@ useEffect(() => {
         <Avatar />
         <div className="chat__headerInfo">
           <h3>{roomName}</h3>
-          {/* {isTyping && "User is typing..."} */}
+          <p className="curr_typing" 
+          style={{display: type && type.data.userId === user._id ? "none" : type && type.data.userName === "unknown" && type.data.userId === "unknown" ? "none": null}}
+          ></p>
         </div>
         <div className="chat__headerRight">
           <IconButton>
@@ -358,9 +399,6 @@ useEffect(() => {
         </div>
       </div>
       <div className="chat__body">
-        {/* <div style={{width: "100px", height: "100px", backgroundColor: "red", zIndex: '1', marginLeft: "auto", marginRight: "auto", alignItems:"center"}}>
-                </div> */}
-
         {msgs.map(({ _id, postedBy, message, timestamp, deletedBy }) => (
           <p key={_id} className={`chat__message ${postedBy._id === user._id && "chat__receiver"}`} style={{display: deletedBy.some(e => e._id === user._id) ? "none" : null}}
           >
@@ -377,7 +415,10 @@ useEffect(() => {
         <form>
           <input
             value={input}
+            onFocus={() => setFocus(true)}
+            onBlur={() => cc()}
             onChange={(e) => changeInput(e.target.value)}
+            onKeyDown={() => isTyping()}
             placeholder="Type A Message"
             type="text"
           />

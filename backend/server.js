@@ -7,11 +7,10 @@ import bcrypt from 'bcryptjs'
 import socket from 'socket.io'
 import http from 'http'
 
-//
+// db
 import Messages from './dbMessages.js'
 import Rooms from './dbRooms.js'
 import Users from './dbUser.js'
-// const router = express.Router()
 
 // app config
 // const app = express()
@@ -27,6 +26,11 @@ const server = app.listen(port, () => {
 let io = socket(server)
 io.on('connection', (socket) => {
   console.log(`${socket.id} is connected here`)
+  socket.on("SEND_MESSAGE", (data) => {
+      io.emit('RECEIVE_MESSAGE',{
+          data
+      })
+  })
 });
 
 // const pusher = new Pusher({
@@ -338,7 +342,6 @@ app.patch('/delmsg', (req, res) => {
 })
 
 app.patch('/editmsg', (req, res) => {
-    // console.log(req.body)
     Rooms.findOneAndUpdate(
         { _id: req.body.roomId, "messages._id":  req.body.msgId},
         { "messages.$.message": req.body.prevMsg},{new: true}
