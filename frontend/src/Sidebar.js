@@ -100,14 +100,13 @@ const Sidebar = ({allRooms}) => {
         setSearch('')
     }
 
-    const autoFocus = true
 
     return (
         <div className='sidebar'>
             <Popper className='userOpts' open={userOpts} disablePortal placement='bottom-start' anchorEl={anc}>
                 <Paper >
                     <ClickAwayListener onClickAway={()=>handleClose()}>
-                        <MenuList autoFocusItem={autoFocus}>
+                        <MenuList autoFocusItem={true}>
                         <MenuItem>Profile</MenuItem>
                         <MenuItem>My account</MenuItem>
                         <MenuItem onClick={()=>logOut()}>Logout</MenuItem>
