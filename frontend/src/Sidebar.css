@@ -13,6 +13,13 @@
     background-color: #65baff;
     border-top-left-radius: 20px;
 }
+.sidebar__header__username{
+    padding-top: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: bolder;
+    letter-spacing: 2px;
+    font-size: x-large;
+}
 
 .sidebar__headerRight{
     display: flex;

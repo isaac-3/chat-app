@@ -37,7 +37,7 @@ import SendIcon from "@material-ui/icons/Send";
 import CloseIcon from "@material-ui/icons/Close";
 import Chatt from "./Chatt";
 import { actionTypes } from "./reducer";
-
+import df from 'dateformat'
 
 const Chat = () => {
 
@@ -275,6 +275,7 @@ useEffect(()=>{
     setType(null)
     isTyping()
   }
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
   return (
     <div className="chat">
@@ -379,7 +380,7 @@ useEffect(()=>{
         </Paper>
       </Popper>
       <div className="chat__header">
-        <Avatar />
+        <Avatar src={`https://avatars.dicebear.com/api/avataaars/${seed}.svg`}/>
         <div className="chat__headerInfo">
           <h3>{roomName}</h3>
           <p className="curr_typing" 
@@ -400,13 +401,15 @@ useEffect(()=>{
       </div>
       <div className="chat__body">
         {msgs.map(({ _id, postedBy, message, timestamp, deletedBy }) => (
-          <p key={_id} className={`chat__message ${postedBy._id === user._id && "chat__receiver"}`} style={{display: deletedBy.some(e => e._id === user._id) ? "none" : null}}
+          <p key={_id} className={`chat__message ${postedBy._id === user._id && "chat__receiver"} ${postedBy._id !== user._id && "chat__sender"}`} style={{display: deletedBy.some(e => e._id === user._id) ? "none" : null}}
           >
-            <span className="chat__name">{postedBy.name}</span>{message}<span className="chat__timestamp">{timestamp}</span>
-            <IconButton onClick={(e) => openMsgOpts(e.target, _id, postedBy._id, message)} size="small">
-                <MoreVert fontSize="small"/>
-            </IconButton>
-            
+            <span className="chat__name">{postedBy.name}</span>{message}
+            <span className="chat__opts">
+              <span className="chat__timestamp">{df(timestamp, "ddd mmm dS , h:MM TT")}</span>
+              <IconButton onClick={(e) => openMsgOpts(e.target, _id, postedBy._id, message)} size="small">
+                  <MoreVert fontSize="small"/>
+              </IconButton>
+            </span>
           </p>
         ))}
       </div>

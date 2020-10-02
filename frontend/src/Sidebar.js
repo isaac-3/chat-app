@@ -117,6 +117,7 @@ const Sidebar = ({allRooms}) => {
 
             <div className='sidebar__header'>
                 <Avatar src="https://media.istockphoto.com/videos/multicolored-motion-gradient-background-shades-of-gray-video-id1063727164?s=640x640"/>
+                <p className="sidebar__header__username">{user.name}</p>
                 <div  className='sidebar__headerRight'>
                     <IconButton>
                         <DonutLargeIcon/>
