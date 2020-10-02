@@ -5,17 +5,12 @@ import Pusher from 'pusher'
 import cors from 'cors'
 import bcrypt from 'bcryptjs'
 import socket from 'socket.io'
-import http from 'http'
 
-// db
-import Messages from './dbMessages.js'
+// db import schema
 import Rooms from './dbRooms.js'
 import Users from './dbUser.js'
 
 // app config
-// const app = express()
-// const http = createServer(app)
-// const io = (http)
 const port = process.env.PORT || 9000
 
 const app = express();
@@ -33,14 +28,6 @@ io.on('connection', (socket) => {
   })
 });
 
-// const pusher = new Pusher({
-//     appId: '1075101',
-//     key: '5954b58616a76df09f9f',
-//     secret: '4b57ac402b162b0a471c',
-//     cluster: 'us2',
-//     encrypted: true
-//   });
-
 //middleware
 app.use(express.json())
 app.use(cors())
@@ -56,51 +43,7 @@ mongoose.connect(connection_url,{
 
 const db = mongoose.connection
 
-// db.once('open', () => {
-//     console.log('roomdb is connected')
-//     const roomCollection = db.collection("roomcontents")
-//     const changeStream = roomCollection.watch({ fullDocument: 'updateLookup' })
-//     changeStream.on('change', (change) => {
-//         console.log(change.operationType)
-//         if(change.operationType === 'insert'){
-//             const roomDetails = change.fullDocument
-//             pusher.trigger('rooms', 'inserted', 
-//                 {
-//                     _id: roomDetails._id,
-//                     name: roomDetails.name,
-//                     messages: roomDetails.messages
-//                 }
-//             )
-//         }else if(change.operationType === 'update'){
-//             const roomId = change.fullDocument._id
-//             const {message, name, timestamp, _id} = change.fullDocument.messages.sort((a,b) => (a.timestamp < b.timestamp) ? 1 : -1)[0]
-//             pusher.trigger('rooms', 'newmsg',
-//                 {
-//                     message,
-//                     name,
-//                     timestamp,
-//                     _id,
-//                     roomId
-//                 }
-//             )
-//         }else{
-//             console.log("err w pusher")
-//         }
-//     })
-// })
-
-
 // api routes
-app.get('/messages/sync', (req, res) => {
-    Messages.find((err, data) => {
-        if(err){
-            res.status(500).send(err)
-        }else{
-            res.status(200).send(data)
-        }
-    })
-})
-
 app.patch('/messages/new', (req, res) => {
     const newMsg = {
         message: req.body.message,
@@ -176,7 +119,6 @@ app.post('/joinroom', (req,res) => {
         const info = {newRoom, currUser: req.body.user._id}
         io.emit('join-room',info)
     }).populate("members", "_id name online")
-
 })
 
 app.patch('/leaveroom', (req,res) => {
