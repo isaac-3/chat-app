@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './Sidebar.css';
 import DonutLargeIcon from '@material-ui/icons/DonutLarge';
 import ChatIcon from '@material-ui/icons/Chat';
-import {Avatar, Button, ClickAwayListener, IconButton, MenuItem, MenuList, Paper, Popper, TextField} from '@material-ui/core'
+import {Avatar, Button, ClickAwayListener, Dialog, IconButton, MenuItem, MenuList, Paper, Popper, TextField} from '@material-ui/core'
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchOutlined from '@material-ui/icons/SearchOutlined';
@@ -14,6 +14,8 @@ import socketIo from 'socket.io-client'
 import { useHistory } from 'react-router-dom';
 import { actionTypes } from './reducer';
 import Chat from './Chat';
+import MuiDialogTitle from "@material-ui/core/DialogTitle";
+import CloseIcon from "@material-ui/icons/Close";
 
 const socket = socketIo('http://localhost:9000')
 
@@ -25,6 +27,7 @@ const Sidebar = ({allRooms}) => {
     const [userOpts, setOpts] = useState(false)
     const [anc, setAnc] = useState(null)
     const [search, setSearch] = useState('')
+    const [dmOpts, setdmOpts] = useState(false)
     let history = useHistory()
 
     useEffect(() => {
@@ -100,6 +103,10 @@ const Sidebar = ({allRooms}) => {
         setSearch('')
     }
 
+    const handledmClose = () => {
+        setdmOpts(false)
+    }
+
 
     return (
         <div className='sidebar'>
@@ -114,7 +121,22 @@ const Sidebar = ({allRooms}) => {
                     </ClickAwayListener>
                 </Paper>
             </Popper>
+            <Dialog
+                open={dmOpts}
+                onClose={() => handledmClose()}
+                aria-labelledby="form-dialog-title"
+            >
+                <MuiDialogTitle id="form-dialog-title">
+                Find A User
+                <IconButton
+                    style={{ float: "right", padding: "4px" }}
+                    onClick={() => handledmClose()}
+                >
+                    <CloseIcon />
+                </IconButton>
+                </MuiDialogTitle>
 
+            </Dialog>
             <div className='sidebar__header'>
                 <Avatar src="https://media.istockphoto.com/videos/multicolored-motion-gradient-background-shades-of-gray-video-id1063727164?s=640x640"/>
                 <p className="sidebar__header__username">{user.name}</p>
@@ -122,7 +144,9 @@ const Sidebar = ({allRooms}) => {
                     <IconButton>
                         <DonutLargeIcon/>
                     </IconButton>
-                    <IconButton>
+                    <IconButton
+                        onClick={()=> setdmOpts(true)}
+                    >
                         <ChatIcon/>
                     </IconButton>
                     <IconButton
