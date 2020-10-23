@@ -11,11 +11,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/nodemailer": "^6.4.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.10.5",
+    "nodemailer": "^6.4.14",
+    "nodemailer-sendgrid-transport": "^0.2.0",
+    "nodemon": "^2.0.6",
     "pusher": "^3.0.1",
     "socket.io": "^2.3.0"
   }

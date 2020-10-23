@@ -5,6 +5,8 @@ import Pusher from 'pusher'
 import cors from 'cors'
 import bcrypt from 'bcryptjs'
 import socket from 'socket.io'
+import nodemailer from 'nodemailer'
+import sendgridTransport from 'nodemailer-sendgrid-transport'
 
 // db import schema
 import Rooms from './dbRooms.js'
@@ -42,6 +44,13 @@ mongoose.connect(connection_url,{
 })
 
 const db = mongoose.connection
+
+//nodemailer
+const transporter = nodemailer.createTransport(sendgridTransport({
+    auth:{
+        api_key: "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"
+    }
+}))
 
 // api routes
 app.patch('/messages/new', (req, res) => {
@@ -194,6 +203,12 @@ app.post('/signup', (req, res) => {
             })
             user.save()
             .then(user=>{
+                transporter.sendMail({
+                    to: user.email,
+                    from: "isaacgc0596@gmail.com",
+                    subject: "Signuped successfully",
+                    html: "<h1>Welcome to Chatter</h1>"
+                })
                 res.json({message: 'saved seccusfullt'})
             })
             .catch(err => {
