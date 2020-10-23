@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs'
 import socket from 'socket.io'
 import nodemailer from 'nodemailer'
 import sendgridTransport from 'nodemailer-sendgrid-transport'
+import crypto from 'crypto'
 
 // db import schema
 import Rooms from './dbRooms.js'
@@ -311,4 +312,33 @@ app.patch('/editmsg', (req, res) => {
          })
         res.json({room})
      })
+})
+
+app.post('/resetpassword', (req, res) => {
+    crypto.randomBytes(32, (err, buffer) => {
+        if(err){
+            console.log(err)
+        }
+        const token = buffer.toString("hex")
+        Users.findOne({email: req.body.email})
+        .then(user => {
+            if(!user){
+                return res.status(422).json({err: "user does not exsist"})
+            }
+            user.resetToken = token
+            user.expireToken = Date.now() + 3600000
+            user.save()
+            .then(result => {
+                transporter.sendMail({
+                    to: user.email,
+                    from: "isaacgc0596@gmail.com",
+                    subject: "Password Reset",
+                    html: 
+                    `<p>You resquested for a password reset</p>
+                    <h5>Click on this <a href="http://localhost:3000/reset/${token}">link</a> to reset your password</h5>`
+                })
+                res.json({message: "check your email for link"})
+            })
+        })
+    })
 })
