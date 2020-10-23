@@ -84,7 +84,6 @@ const Login = () => {
                 </Alert>
             </Snackbar>
             <div className="login__container">
-                {/* <img src="https://www.kindpng.com/picc/m/74-747955_redes-sociales-logos-png-whatsapp-logo-png-transparent.png" alt=""/> */}
                 <ForumIcon style={{fontSize: "100px"}} className=" logo_icon"/>
                 <div className="login__manuel">
                     <input
