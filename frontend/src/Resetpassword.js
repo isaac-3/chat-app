@@ -1,24 +1,20 @@
 import React, { useState } from 'react';
 import { Button } from '@material-ui/core'
 import './Login.css'
-import {auth, provider} from './firebase'
-import { useStateValue } from './StateProvider';
-import { actionTypes } from './reducer';
-import {Link, useHistory} from 'react-router-dom'
+import {Link, useHistory, useParams} from 'react-router-dom'
 import axios from './axios'
 import Alert from '@material-ui/lab/Alert';
 import Snackbar from '@material-ui/core/Snackbar';
 import ForumIcon from '@material-ui/icons/Forum';
 
-const Login = () => {
+const Resetpassword = () => {
 
-    const [{}, dispatch] = useStateValue()
     const [password, setPassword] = useState('')
-    const [email, setEmail] = useState('')
     const history = useHistory()
     const [err__open, setErrOpen] = useState(false)
     const [fields__open, setFieldOpen] = useState(false)
     const [exist__open, setExsistOpen] = useState(false)
+    const {token} = useParams()
 
     const handleErrClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -42,24 +38,15 @@ const Login = () => {
     };
 
     const postdata = () => {
-        if(!/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email)){
-            setErrOpen(true)
-            return
-        }
-        axios.post('/login',{
-            email,
-            password
+        axios.post('/newpassword',{
+            password,
+            token
         })
         .then(data=>{
             if(data.data.error){
                 setExsistOpen(true)
             }else{
-                dispatch({
-                    type: actionTypes.SET_USER,
-                    user: data.data.user
-                })
-                localStorage.setItem("user", JSON.stringify(data.data.user))
-                history.push('/rooms')
+                history.push('/login')
             }
         }).catch(err => {
             setFieldOpen(true)
@@ -88,26 +75,18 @@ const Login = () => {
                 <ForumIcon style={{fontSize: "100px"}} className=" logo_icon"/>
                 <div className="login__manuel">
                     <input
-                    type="text"
-                    placeholder="email"
-                    value={email}
-                    onChange={(e)=>setEmail(e.target.value)}
-                    />
-                    <input
                     type="password"
-                    placeholder="password"
+                    placeholder="Enter new password"
                     value={password}
                     onChange={(e)=>setPassword(e.target.value)}
                     />
                     <Button
                         onClick={()=>postdata()}
-                    >Login</Button>
-                    <h5 className="login__text"><Link to='/signup'>Dont have an account ? Sign Up!</Link></h5>
-                    <h5 className="login__text"><Link to='/reset'>Forgot Password?</Link></h5>
+                    >Update Password</Button>
                 </div>
             </div>
         </div>
     );
 }
  
-export default Login;
+export default Resetpassword;

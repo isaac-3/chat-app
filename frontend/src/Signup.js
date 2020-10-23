@@ -118,6 +118,7 @@ const Signup = () => {
                         onClick={() => postdata()}
                     >Signup</Button>
                     <h5 className="signup__text"><Link to='/login'>Already have an account ?</Link></h5>
+                    <h5 className="login__text"><Link to='/reset'>Forgot Password?</Link></h5>
                 </div>
             </div>
         </div>

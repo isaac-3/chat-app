@@ -49,7 +49,7 @@ const db = mongoose.connection
 //nodemailer
 const transporter = nodemailer.createTransport(sendgridTransport({
     auth:{
-        api_key: null
+        api_key: "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"
     }
 }))
 
@@ -339,6 +339,24 @@ app.post('/resetpassword', (req, res) => {
                 })
                 res.json({message: "check your email for link"})
             })
+        })
+    })
+})
+
+app.post('/newpassword', (req, res) => {
+    const newPassword = req.body.password
+    const sentToken = req.body.token
+    Users.findOne({resetToken: sentToken, expireToken: {$gt: Date.now()}})
+    .then(user=>{
+        if(!user){
+            return res.status(422).json({error: "session expired try again!"})
+        }
+        bcrypt.hash(newPassword,12)
+        .then(hashedpassword => {
+            user.password = hashedpassword
+            user.resetToken = undefined
+            user.expireToken = undefined
+            user.save()
         })
     })
 })
