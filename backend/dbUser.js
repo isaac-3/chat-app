@@ -18,6 +18,8 @@ const userSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    resetToken: String,
+    expireToken: Date,
     rooms:[
         {type: ObjectId, ref: "roomcontents"}
     ] 

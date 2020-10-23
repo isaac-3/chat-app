@@ -10,6 +10,7 @@ import { useStateValue } from './StateProvider';
 import Signup from './Signup';
 import { actionTypes } from './reducer';
 import Chatt from './Chatt'
+import Reset from './Reset';
 // import socketIo from 'socket.io-client'
 
 // const socket = socketIo('http://localhost:9000')
@@ -49,6 +50,7 @@ function App() {
   return (
     <div className="app">
       <Router >
+      <Route exact path="/reset" component={Reset}/>
       {!user ? (
         <div>
           <Route exact path="/login">
@@ -61,9 +63,7 @@ function App() {
           
       ) : (
         <div className="app__body">
-        {/* <Router> */}
           <Sidebar allRooms={allRooms}/>
-          {/* <Chat /> */}
           <Route exact path="/rooms/:roomId" component={Chat}/>
           <Route exact path="/rooms" component={Chatt}/>
       </div>
