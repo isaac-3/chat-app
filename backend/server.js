@@ -48,7 +48,7 @@ const db = mongoose.connection
 //nodemailer
 const transporter = nodemailer.createTransport(sendgridTransport({
     auth:{
-        api_key: "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"
+        api_key: null
     }
 }))
 
