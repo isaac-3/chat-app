@@ -11,6 +11,7 @@ import Signup from './Signup';
 import { actionTypes } from './reducer';
 import Chatt from './Chatt'
 import Reset from './Reset';
+import Resetpassword from './Resetpassword';
 // import socketIo from 'socket.io-client'
 
 // const socket = socketIo('http://localhost:9000')
@@ -51,6 +52,7 @@ function App() {
     <div className="app">
       <Router >
       <Route exact path="/reset" component={Reset}/>
+      <Route exact path="/reset/:token" component={Resetpassword}/>
       {!user ? (
         <div>
           <Route exact path="/login">

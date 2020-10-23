@@ -342,3 +342,21 @@ app.post('/resetpassword', (req, res) => {
         })
     })
 })
+
+app.post('/newpassword', (req, res) => {
+    const newPassword = req.body.password
+    const sentToken = req.body.token
+    Users.findOne({resetToken: sentToken, expireToken: {$gt: Date.now()}})
+    .then(user=>{
+        if(!user){
+            return res.status(422).json({error: "session expired try again!"})
+        }
+        bcrypt.hash(newPassword,12)
+        .then(hashedpassword => {
+            user.password = hashedpassword
+            user.resetToken = undefined
+            user.expireToken = undefined
+            user.save()
+        })
+    })
+})
